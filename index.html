@@ -17,6 +17,22 @@
           </div>
         </div>
 
+        <label class="search-box">
+          <span>搜索知识点</span>
+          <input id="searchInput" type="search" placeholder="知识点名称 / 关键词" />
+        </label>
+
+        <section class="filter-panel" aria-label="筛选">
+          <div class="filter-group compact">
+            <div class="filter-title">掌握状态</div>
+            <div id="statusFilters" class="chip-list"></div>
+          </div>
+          <div class="filter-group compact">
+            <div class="filter-title">难度</div>
+            <div id="levelFilters" class="chip-list"></div>
+          </div>
+        </section>
+
         <section class="tree-panel">
           <div class="filter-title">知识结构图谱</div>
           <div id="knowledgeTree" class="knowledge-tree"></div>
@@ -48,54 +64,9 @@
           </div>
         </header>
 
-        <section class="tool-panel" aria-label="筛选">
-          <label class="search-box">
-            <span>搜索</span>
-            <input id="searchInput" type="search" placeholder="知识点 / 关键词" />
-          </label>
-          <div class="filter-group compact">
-            <div class="filter-title">掌握状态</div>
-            <div id="statusFilters" class="chip-list"></div>
-          </div>
-          <div class="filter-group compact">
-            <div class="filter-title">难度</div>
-            <div id="levelFilters" class="chip-list"></div>
-          </div>
+        <section class="detail-panel" aria-label="知识点详情">
+          <div id="detailView"></div>
         </section>
-
-        <section class="metrics" aria-label="统计">
-          <div class="metric">
-            <span id="totalCount">0</span>
-            <p>知识点</p>
-          </div>
-          <div class="metric">
-            <span id="weakCount">0</span>
-            <p>未掌握</p>
-          </div>
-          <div class="metric">
-            <span id="learningCount">0</span>
-            <p>学习中</p>
-          </div>
-          <div class="metric">
-            <span id="masteredCount">0</span>
-            <p>已掌握</p>
-          </div>
-        </section>
-
-        <div class="workspace">
-          <section class="knowledge-list" aria-label="筛选结果">
-            <div class="list-head">
-              <h3>筛选结果</h3>
-              <span id="resultCount">0</span>
-            </div>
-            <div id="cardList" class="card-list"></div>
-            <div id="emptyState" class="empty-state" hidden>没有匹配的知识点</div>
-          </section>
-
-          <section class="detail-panel" aria-label="知识点详情">
-            <div id="detailView"></div>
-          </section>
-        </div>
       </section>
     </main>
 
@@ -118,7 +89,7 @@
             <input id="moduleField" required />
           </label>
           <label>
-            单元
+            章节
             <input id="unitField" required />
           </label>
           <label>

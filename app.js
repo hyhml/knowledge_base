@@ -587,8 +587,6 @@ const state = {
   items: [],
   activeId: "",
   filters: {
-    module: "全部",
-    unit: "全部",
     status: "全部",
     level: "全部",
     query: ""
@@ -605,13 +603,6 @@ const els = {
   statusFilters: document.querySelector("#statusFilters"),
   levelFilters: document.querySelector("#levelFilters"),
   pageTitle: document.querySelector("#pageTitle"),
-  resultCount: document.querySelector("#resultCount"),
-  totalCount: document.querySelector("#totalCount"),
-  weakCount: document.querySelector("#weakCount"),
-  learningCount: document.querySelector("#learningCount"),
-  masteredCount: document.querySelector("#masteredCount"),
-  cardList: document.querySelector("#cardList"),
-  emptyState: document.querySelector("#emptyState"),
   detailView: document.querySelector("#detailView"),
   addBtn: document.querySelector("#addBtn"),
   resetBtn: document.querySelector("#resetBtn"),
@@ -634,7 +625,15 @@ const els = {
 };
 
 function cloneSeed() {
-  return JSON.parse(JSON.stringify(seedKnowledge));
+  return normalizeItems(JSON.parse(JSON.stringify(seedKnowledge)));
+}
+
+function normalizeItems(items) {
+  return items.map((item) => ({
+    subject: "数学",
+    ...item,
+    subject: item.subject || "数学"
+  }));
 }
 
 function loadItems() {
@@ -643,7 +642,7 @@ function loadItems() {
 
   try {
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : cloneSeed();
+    return Array.isArray(parsed) ? normalizeItems(parsed) : cloneSeed();
   } catch {
     return cloneSeed();
   }
@@ -717,7 +716,7 @@ async function loadSharedData({ showSuccess = true } = {}) {
     const token = getToken();
     setSyncStatus("正在加载 GitHub 共享数据");
     const shared = await fetchSharedFile(token);
-    state.items = Array.isArray(shared.content) ? shared.content : cloneSeed();
+    state.items = Array.isArray(shared.content) ? normalizeItems(shared.content) : cloneSeed();
     sharedFileSha = shared.sha;
     state.activeId = state.items[0]?.id || "";
     saveItems();
@@ -790,19 +789,18 @@ function statusClass(status) {
   return "weak";
 }
 
-function uniqueValues(key) {
-  return ["全部", ...new Set(state.items.map((item) => item[key]).filter(Boolean))];
-}
-
 function groupByStructure(items) {
-  return items.reduce((modules, item) => {
+  return items.reduce((subjects, item) => {
+    const subjectName = item.subject || "数学";
     const moduleName = item.module || "未分模块";
-    const unitName = item.unit || "未分单元";
+    const unitName = item.unit || "未分章节";
+    if (!subjects.has(subjectName)) subjects.set(subjectName, new Map());
+    const modules = subjects.get(subjectName);
     if (!modules.has(moduleName)) modules.set(moduleName, new Map());
     const units = modules.get(moduleName);
     if (!units.has(unitName)) units.set(unitName, []);
     units.get(unitName).push(item);
-    return modules;
+    return subjects;
   }, new Map());
 }
 
@@ -842,15 +840,13 @@ function filteredItems() {
   const query = state.filters.query.trim().toLowerCase();
 
   return state.items.filter((item) => {
-    const moduleMatch =
-      state.filters.module === "全部" || item.module === state.filters.module;
-    const unitMatch = state.filters.unit === "全部" || item.unit === state.filters.unit;
     const statusMatch =
       state.filters.status === "全部" || item.status === state.filters.status;
     const levelMatch =
       state.filters.level === "全部" || item.level === state.filters.level;
     const text = [
       item.name,
+      item.subject || "数学",
       item.module,
       item.unit,
       item.explanation,
@@ -860,7 +856,7 @@ function filteredItems() {
       .join(" ")
       .toLowerCase();
     const queryMatch = !query || text.includes(query);
-    return moduleMatch && unitMatch && statusMatch && levelMatch && queryMatch;
+    return statusMatch && levelMatch && queryMatch;
   });
 }
 
@@ -898,150 +894,103 @@ function renderFilters() {
   );
 }
 
-function setTreeScope(moduleName = "全部", unitName = "全部", activeId = "") {
-  state.filters.module = moduleName;
-  state.filters.unit = unitName;
+function selectTreeItem(activeId = "") {
   if (activeId) state.activeId = activeId;
   render();
 }
 
-function renderKnowledgeTree() {
-  const modules = groupByStructure(state.items);
-  const total = state.items.length;
-  const rootActive = state.filters.module === "全部" && state.filters.unit === "全部";
+function renderKnowledgeTree(items) {
+  const subjects = groupByStructure(items);
+  const total = items.length;
 
-  const moduleBlocks = [...modules.entries()]
-    .map(([moduleName, units]) => {
-      const moduleItems = [...units.values()].flat();
-      const moduleActive = state.filters.module === moduleName && state.filters.unit === "全部";
-      const unitBlocks = [...units.entries()]
-        .map(([unitName, items]) => {
-          const unitActive =
-            state.filters.module === moduleName && state.filters.unit === unitName;
-          const itemButtons = items
-            .map(
-              (item) => `
-                <button
-                  class="tree-node tree-topic${item.id === state.activeId ? " active" : ""}"
-                  type="button"
-                  data-tree-id="${escapeHtml(item.id)}"
-                  title="${escapeHtml(item.name)}"
-                >
-                  <span class="status-dot ${statusClass(item.status)}"></span>
-                  <span>${escapeHtml(item.name)}</span>
-                </button>
-              `
-            )
+  if (!total) {
+    els.knowledgeTree.innerHTML = `<div class="tree-empty">没有匹配的知识点</div>`;
+    return;
+  }
+
+  const subjectBlocks = [...subjects.entries()]
+    .map(([subjectName, modules]) => {
+      const subjectItems = [...modules.values()].flatMap((units) => [...units.values()].flat());
+      const moduleBlocks = [...modules.entries()]
+        .map(([moduleName, units]) => {
+          const moduleItems = [...units.values()].flat();
+          const unitBlocks = [...units.entries()]
+            .map(([unitName, topicItems]) => {
+              const itemButtons = topicItems
+                .map(
+                  (item) => `
+                    <button
+                      class="tree-node tree-topic${item.id === state.activeId ? " active" : ""}"
+                      type="button"
+                      data-tree-id="${escapeHtml(item.id)}"
+                      title="${escapeHtml(item.name)}"
+                    >
+                      <span class="status-dot ${statusClass(item.status)}"></span>
+                      <span>${escapeHtml(item.name)}</span>
+                    </button>
+                  `
+                )
+                .join("");
+
+              return `
+                <details class="tree-unit" open>
+                  <summary class="tree-summary tree-unit-name">
+                    <span>${escapeHtml(unitName)}</span>
+                    <span class="tree-count">${topicItems.length}</span>
+                  </summary>
+                  <div class="tree-children">${itemButtons}</div>
+                </details>
+              `;
+            })
             .join("");
 
           return `
-            <div class="tree-unit">
-              <button
-                class="tree-node tree-unit-name${unitActive ? " active" : ""}"
-                type="button"
-                data-tree-module="${escapeHtml(moduleName)}"
-                data-tree-unit="${escapeHtml(unitName)}"
-              >
-                <span>${escapeHtml(unitName)}</span>
-                <span class="tree-count">${items.length}</span>
-              </button>
-              <div class="tree-children">${itemButtons}</div>
-            </div>
+            <details class="tree-module" open>
+              <summary class="tree-summary tree-module-name">
+                <span>${escapeHtml(moduleName)}</span>
+                <span class="tree-count">${moduleItems.length}</span>
+              </summary>
+              <div class="tree-module-inner">${unitBlocks}</div>
+            </details>
           `;
         })
         .join("");
 
       return `
-        <details class="tree-module" open>
-          <summary>
-            <button
-              class="tree-node tree-module-name${moduleActive ? " active" : ""}"
-              type="button"
-              data-tree-module="${escapeHtml(moduleName)}"
-            >
-              <span>${escapeHtml(moduleName)}</span>
-              <span class="tree-count">${moduleItems.length}</span>
-            </button>
+        <details class="tree-subject" open>
+          <summary class="tree-summary tree-subject-name">
+            <span>${escapeHtml(subjectName)}</span>
+            <span class="tree-count">${subjectItems.length}</span>
           </summary>
-          <div class="tree-children">${unitBlocks}</div>
+          <div class="tree-children">${moduleBlocks}</div>
         </details>
       `;
     })
     .join("");
 
   els.knowledgeTree.innerHTML = `
-    <button class="tree-root${rootActive ? " active" : ""}" type="button" data-tree-root="true">
-      <span>高中数学</span>
+    <button class="tree-root" type="button" data-tree-root="true">
+      <span>全部匹配</span>
       <span class="tree-count">${total}</span>
     </button>
-    ${moduleBlocks}
+    ${subjectBlocks}
   `;
 
   els.knowledgeTree.querySelector("[data-tree-root]").addEventListener("click", () => {
-    setTreeScope("全部", "全部", state.items[0]?.id || "");
-  });
-
-  els.knowledgeTree.querySelectorAll("[data-tree-module]").forEach((button) => {
-    button.addEventListener("click", (event) => {
-      event.preventDefault();
-      const moduleName = button.dataset.treeModule;
-      const unitName = button.dataset.treeUnit || "全部";
-      const firstMatch = state.items.find((item) => {
-        const moduleMatch = item.module === moduleName;
-        const unitMatch = unitName === "全部" || item.unit === unitName;
-        return moduleMatch && unitMatch;
-      });
-      setTreeScope(moduleName, unitName, firstMatch?.id || "");
-    });
+    selectTreeItem(items[0]?.id || "");
   });
 
   els.knowledgeTree.querySelectorAll("[data-tree-id]").forEach((button) => {
     button.addEventListener("click", () => {
-      const item = state.items.find((entry) => entry.id === button.dataset.treeId);
-      if (!item) return;
-      setTreeScope(item.module, item.unit, item.id);
+      selectTreeItem(button.dataset.treeId);
     });
-  });
-}
-
-function renderMetrics(items) {
-  els.totalCount.textContent = items.length;
-  els.weakCount.textContent = items.filter((item) => item.status === "未掌握").length;
-  els.learningCount.textContent = items.filter((item) => item.status === "学习中").length;
-  els.masteredCount.textContent = items.filter((item) => item.status === "已掌握").length;
-}
-
-function renderCards(items) {
-  els.cardList.innerHTML = "";
-  els.resultCount.textContent = items.length;
-  els.emptyState.hidden = items.length > 0;
-
-  items.forEach((item) => {
-    const card = document.createElement("button");
-    card.type = "button";
-    card.className = `card${item.id === state.activeId ? " active" : ""}`;
-    card.innerHTML = `
-      <h3>${escapeHtml(item.name)}</h3>
-      <p>${escapeHtml(item.explanation)}</p>
-      <div class="card-meta">
-        <span class="tag">${escapeHtml(item.module)}</span>
-        <span class="tag">${escapeHtml(item.unit)}</span>
-        <span class="tag ${statusClass(item.status)}">${escapeHtml(item.status)}</span>
-        <span class="tag">${escapeHtml(item.level)}</span>
-      </div>
-    `;
-    card.addEventListener("click", () => {
-      state.activeId = item.id;
-      render();
-    });
-    els.cardList.append(card);
   });
 }
 
 function renderDetail(items) {
   const active = items.find((item) => item.id === state.activeId) || items[0];
   if (!active) {
-    els.detailView.innerHTML = `<div class="empty-state">请选择或新增知识点</div>`;
+    els.detailView.innerHTML = `<div class="empty-state">左侧没有匹配的知识点</div>`;
     return;
   }
 
@@ -1055,6 +1004,7 @@ function renderDetail(items) {
       <div>
         <h3>${escapeHtml(active.name)}</h3>
         <div class="detail-meta">
+          <span class="tag">${escapeHtml(active.subject || "数学")}</span>
           <span class="tag">${escapeHtml(active.module)}</span>
           <span class="tag">${escapeHtml(active.unit)}</span>
           <span class="tag ${statusClass(active.status)}">${escapeHtml(active.status)}</span>
@@ -1096,7 +1046,11 @@ function renderDetail(items) {
     button.addEventListener("click", () => {
       const item = state.items.find((entry) => entry.id === button.dataset.prereqId);
       if (!item) return;
-      setTreeScope(item.module, item.unit, item.id);
+      state.filters.query = "";
+      els.searchInput.value = "";
+      state.filters.status = "全部";
+      state.filters.level = "全部";
+      selectTreeItem(item.id);
     });
   });
 }
@@ -1146,9 +1100,7 @@ function escapeHtml(value = "") {
 }
 
 function renderTitle(items) {
-  const moduleText = state.filters.module === "全部" ? "全部知识点" : state.filters.module;
-  const unitText = state.filters.unit === "全部" ? "" : ` / ${state.filters.unit}`;
-  els.pageTitle.textContent = `${moduleText}${unitText} · ${items.length} 项`;
+  els.pageTitle.textContent = `知识点详情 · ${items.length} 项匹配`;
 }
 
 function render() {
@@ -1157,10 +1109,8 @@ function render() {
     state.activeId = items[0].id;
   }
   renderFilters();
-  renderKnowledgeTree();
+  renderKnowledgeTree(items);
   renderTitle(items);
-  renderMetrics(items);
-  renderCards(items);
   renderDetail(items);
 }
 
@@ -1188,6 +1138,7 @@ function readForm() {
   const id = els.idField.value || makeId(name);
   return {
     id,
+    subject: "数学",
     name,
     module: els.moduleField.value.trim(),
     unit: els.unitField.value.trim(),

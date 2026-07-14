@@ -1,5 +1,6 @@
 [
   {
+    "subject": "数学",
     "id": "set-basic",
     "module": "集合与逻辑",
     "unit": "集合",
@@ -27,6 +28,7 @@
     ]
   },
   {
+    "subject": "数学",
     "id": "logic-condition",
     "module": "集合与逻辑",
     "unit": "常用逻辑用语",
@@ -55,6 +57,7 @@
     ]
   },
   {
+    "subject": "数学",
     "id": "function-concept",
     "module": "函数",
     "unit": "函数概念",
@@ -84,6 +87,7 @@
     ]
   },
   {
+    "subject": "数学",
     "id": "function-monotonic",
     "module": "函数",
     "unit": "函数性质",
@@ -112,6 +116,7 @@
     ]
   },
   {
+    "subject": "数学",
     "id": "function-parity",
     "module": "函数",
     "unit": "函数性质",
@@ -140,6 +145,7 @@
     ]
   },
   {
+    "subject": "数学",
     "id": "quadratic-function",
     "module": "函数",
     "unit": "二次函数",
@@ -168,6 +174,7 @@
     ]
   },
   {
+    "subject": "数学",
     "id": "exponential-log",
     "module": "函数",
     "unit": "指数与对数",
@@ -196,6 +203,7 @@
     ]
   },
   {
+    "subject": "数学",
     "id": "trig-basic",
     "module": "三角函数",
     "unit": "任意角三角函数",
@@ -223,6 +231,7 @@
     ]
   },
   {
+    "subject": "数学",
     "id": "trig-identity",
     "module": "三角函数",
     "unit": "诱导公式",
@@ -251,6 +260,7 @@
     ]
   },
   {
+    "subject": "数学",
     "id": "sequence-basic",
     "module": "数列",
     "unit": "数列概念",
@@ -277,6 +287,7 @@
     ]
   },
   {
+    "subject": "数学",
     "id": "arithmetic-sequence",
     "module": "数列",
     "unit": "等差数列",
@@ -305,6 +316,7 @@
     ]
   },
   {
+    "subject": "数学",
     "id": "geometric-sequence",
     "module": "数列",
     "unit": "等比数列",
@@ -333,6 +345,7 @@
     ]
   },
   {
+    "subject": "数学",
     "id": "inequality-basic",
     "module": "不等式",
     "unit": "不等式性质",
@@ -359,6 +372,7 @@
     ]
   },
   {
+    "subject": "数学",
     "id": "basic-inequality",
     "module": "不等式",
     "unit": "基本不等式",
@@ -387,6 +401,7 @@
     ]
   },
   {
+    "subject": "数学",
     "id": "vector-basic",
     "module": "平面向量",
     "unit": "向量概念",
@@ -413,6 +428,7 @@
     ]
   },
   {
+    "subject": "数学",
     "id": "vector-dot",
     "module": "平面向量",
     "unit": "数量积",
@@ -441,6 +457,7 @@
     ]
   },
   {
+    "subject": "数学",
     "id": "line-equation",
     "module": "解析几何",
     "unit": "直线",
@@ -467,6 +484,7 @@
     ]
   },
   {
+    "subject": "数学",
     "id": "circle-equation",
     "module": "解析几何",
     "unit": "圆",
@@ -495,6 +513,7 @@
     ]
   },
   {
+    "subject": "数学",
     "id": "derivative-basic",
     "module": "导数",
     "unit": "导数概念",
@@ -524,6 +543,7 @@
     ]
   },
   {
+    "subject": "数学",
     "id": "derivative-monotonic",
     "module": "导数",
     "unit": "导数应用",
@@ -554,6 +574,7 @@
     ]
   },
   {
+    "subject": "数学",
     "id": "probability-basic",
     "module": "概率统计",
     "unit": "概率",
