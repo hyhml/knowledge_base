@@ -579,6 +579,54 @@ details:not([open]) > .tree-summary::before {
   line-height: 1.55;
 }
 
+.mistake-list {
+  display: grid;
+  gap: 12px;
+}
+
+.mistake-item {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  background: #fff;
+}
+
+.mistake-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mistake-head strong {
+  line-height: 1.5;
+}
+
+.mistake-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.mistake-image-link {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 6px 10px;
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  font-size: 13px;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.mistake-item p {
+  margin: 0;
+}
+
 .prereq-list {
   display: flex;
   flex-wrap: wrap;

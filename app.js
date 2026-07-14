@@ -1450,6 +1450,7 @@ const seedKnowledge = [
 ];
 const state = {
   items: [],
+  mistakes: [],
   activeId: "",
   filters: {
     status: "全部",
@@ -1526,6 +1527,14 @@ function publicDataUrl() {
   return `./${GITHUB_CONFIG.path}?t=${Date.now()}`;
 }
 
+function publicMistakeIndexUrl() {
+  return `./data/mistakes/index.json?t=${Date.now()}`;
+}
+
+function publicJsonUrl(path) {
+  return `./${path}?t=${Date.now()}`;
+}
+
 function githubHeaders(token = "") {
   const headers = {
     Accept: "application/vnd.github+json",
@@ -1593,6 +1602,32 @@ async function fetchPublicSharedData() {
   return Array.isArray(content) ? content : cloneSeed();
 }
 
+async function fetchPublicMistakes() {
+  const response = await fetch(publicMistakeIndexUrl(), {
+    cache: "no-store"
+  });
+
+  if (!response.ok) return [];
+
+  const index = await response.json();
+  const entries = Array.isArray(index.mistakes) ? index.mistakes : [];
+  const mistakes = await Promise.all(
+    entries.map(async (entry) => {
+      try {
+        const detailResponse = await fetch(publicJsonUrl(entry.file), {
+          cache: "no-store"
+        });
+        if (!detailResponse.ok) return null;
+        return detailResponse.json();
+      } catch {
+        return null;
+      }
+    })
+  );
+
+  return mistakes.filter(Boolean);
+}
+
 async function loadSharedData({ showSuccess = true } = {}) {
   try {
     const token = getToken();
@@ -1611,6 +1646,7 @@ async function loadSharedData({ showSuccess = true } = {}) {
       state.items = normalizeItems(await fetchPublicSharedData());
       sharedFileSha = "";
     }
+    state.mistakes = await fetchPublicMistakes();
     state.activeId = state.items[0]?.id || "";
     saveItems();
     render();
@@ -1891,6 +1927,9 @@ function renderDetail(items) {
   const prereqItems = (active.prerequisites || [])
     .map((id) => state.items.find((item) => item.id === id))
     .filter(Boolean);
+  const relatedMistakes = state.mistakes.filter((mistake) =>
+    (mistake.knowledgeIds || []).includes(active.id)
+  );
 
   els.detailView.innerHTML = `
     <div class="detail-head">
@@ -1931,6 +1970,11 @@ function renderDetail(items) {
     <section class="detail-section">
       <h4>前置知识点</h4>
       ${renderPrerequisites(prereqItems)}
+    </section>
+
+    <section class="detail-section">
+      <h4>关联错题</h4>
+      ${renderMistakes(relatedMistakes)}
     </section>
 
     <section class="detail-section">
@@ -2004,6 +2048,43 @@ function renderExamples(examples = []) {
       `
     )
     .join("");
+}
+
+function renderMistakes(mistakes = []) {
+  if (!mistakes.length) return `<p>暂无关联错题</p>`;
+  return `
+    <div class="mistake-list">
+      ${mistakes
+        .map(
+          (mistake) => `
+            <article class="mistake-item">
+              <div class="mistake-head">
+                <strong>${escapeHtml(mistake.question || "错题")}</strong>
+                <span class="tag ${mistake.reviewStatus === "reviewed" ? "ok" : "warn"}">${escapeHtml(
+                  mistake.reviewStatus || "draft"
+                )}</span>
+              </div>
+              <div class="mistake-meta">
+                <span>${escapeHtml(mistake.date || "")}</span>
+                <span>${escapeHtml(mistake.mistakeType || "")}</span>
+                <span>${escapeHtml(mistake.masteryStatus || "")}</span>
+              </div>
+              ${
+                mistake.imagePath
+                  ? `<a class="mistake-image-link" href="${escapeHtml(
+                      mistake.imagePath
+                    )}" target="_blank" rel="noopener noreferrer">查看原图</a>`
+                  : ""
+              }
+              <p><b>正确答案：</b>${escapeHtml(mistake.correctAnswer || "暂未记录")}</p>
+              <p><b>错因：</b>${escapeHtml(mistake.mistakeReason || "暂未记录")}</p>
+              <p><b>讲解：</b>${escapeHtml(mistake.analysis || "暂未记录")}</p>
+            </article>
+          `
+        )
+        .join("")}
+    </div>
+  `;
 }
 
 function escapeHtml(value = "") {
