@@ -1522,6 +1522,10 @@ function githubContentsUrl() {
   return `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
 }
 
+function publicDataUrl() {
+  return `./${GITHUB_CONFIG.path}?t=${Date.now()}`;
+}
+
 function githubHeaders(token = "") {
   const headers = {
     Accept: "application/vnd.github+json",
@@ -1576,13 +1580,37 @@ async function fetchSharedFile(token = "") {
   };
 }
 
+async function fetchPublicSharedData() {
+  const response = await fetch(publicDataUrl(), {
+    cache: "no-store"
+  });
+
+  if (!response.ok) {
+    throw new Error(`共享数据读取失败：${response.status}`);
+  }
+
+  const content = await response.json();
+  return Array.isArray(content) ? content : cloneSeed();
+}
+
 async function loadSharedData({ showSuccess = true } = {}) {
   try {
     const token = getToken();
     setSyncStatus("正在加载 GitHub 共享数据");
-    const shared = await fetchSharedFile(token);
-    state.items = Array.isArray(shared.content) ? normalizeItems(shared.content) : cloneSeed();
-    sharedFileSha = shared.sha;
+    if (token) {
+      try {
+        const shared = await fetchSharedFile(token);
+        state.items = Array.isArray(shared.content) ? normalizeItems(shared.content) : cloneSeed();
+        sharedFileSha = shared.sha;
+      } catch (error) {
+        console.warn("GitHub API 读取失败，改用公开数据文件。", error);
+        state.items = normalizeItems(await fetchPublicSharedData());
+        sharedFileSha = "";
+      }
+    } else {
+      state.items = normalizeItems(await fetchPublicSharedData());
+      sharedFileSha = "";
+    }
     state.activeId = state.items[0]?.id || "";
     saveItems();
     render();
