@@ -588,6 +588,7 @@ const state = {
   activeId: "",
   filters: {
     module: "全部",
+    unit: "全部",
     status: "全部",
     level: "全部",
     query: ""
@@ -600,10 +601,11 @@ const els = {
   syncStatus: document.querySelector("#syncStatus"),
   loadSharedBtn: document.querySelector("#loadSharedBtn"),
   saveSharedBtn: document.querySelector("#saveSharedBtn"),
-  moduleFilters: document.querySelector("#moduleFilters"),
+  knowledgeTree: document.querySelector("#knowledgeTree"),
   statusFilters: document.querySelector("#statusFilters"),
   levelFilters: document.querySelector("#levelFilters"),
   pageTitle: document.querySelector("#pageTitle"),
+  resultCount: document.querySelector("#resultCount"),
   totalCount: document.querySelector("#totalCount"),
   weakCount: document.querySelector("#weakCount"),
   learningCount: document.querySelector("#learningCount"),
@@ -792,6 +794,18 @@ function uniqueValues(key) {
   return ["全部", ...new Set(state.items.map((item) => item[key]).filter(Boolean))];
 }
 
+function groupByStructure(items) {
+  return items.reduce((modules, item) => {
+    const moduleName = item.module || "未分模块";
+    const unitName = item.unit || "未分单元";
+    if (!modules.has(moduleName)) modules.set(moduleName, new Map());
+    const units = modules.get(moduleName);
+    if (!units.has(unitName)) units.set(unitName, []);
+    units.get(unitName).push(item);
+    return modules;
+  }, new Map());
+}
+
 function splitLines(value) {
   return value
     .split("\n")
@@ -830,6 +844,7 @@ function filteredItems() {
   return state.items.filter((item) => {
     const moduleMatch =
       state.filters.module === "全部" || item.module === state.filters.module;
+    const unitMatch = state.filters.unit === "全部" || item.unit === state.filters.unit;
     const statusMatch =
       state.filters.status === "全部" || item.status === state.filters.status;
     const levelMatch =
@@ -845,7 +860,7 @@ function filteredItems() {
       .join(" ")
       .toLowerCase();
     const queryMatch = !query || text.includes(query);
-    return moduleMatch && statusMatch && levelMatch && queryMatch;
+    return moduleMatch && unitMatch && statusMatch && levelMatch && queryMatch;
   });
 }
 
@@ -862,11 +877,6 @@ function renderChips(container, values, activeValue, onSelect) {
 }
 
 function renderFilters() {
-  renderChips(els.moduleFilters, uniqueValues("module"), state.filters.module, (value) => {
-    state.filters.module = value;
-    render();
-  });
-
   renderChips(
     els.statusFilters,
     ["全部", "未掌握", "学习中", "已掌握"],
@@ -888,6 +898,112 @@ function renderFilters() {
   );
 }
 
+function setTreeScope(moduleName = "全部", unitName = "全部", activeId = "") {
+  state.filters.module = moduleName;
+  state.filters.unit = unitName;
+  if (activeId) state.activeId = activeId;
+  render();
+}
+
+function renderKnowledgeTree() {
+  const modules = groupByStructure(state.items);
+  const total = state.items.length;
+  const rootActive = state.filters.module === "全部" && state.filters.unit === "全部";
+
+  const moduleBlocks = [...modules.entries()]
+    .map(([moduleName, units]) => {
+      const moduleItems = [...units.values()].flat();
+      const moduleActive = state.filters.module === moduleName && state.filters.unit === "全部";
+      const unitBlocks = [...units.entries()]
+        .map(([unitName, items]) => {
+          const unitActive =
+            state.filters.module === moduleName && state.filters.unit === unitName;
+          const itemButtons = items
+            .map(
+              (item) => `
+                <button
+                  class="tree-node tree-topic${item.id === state.activeId ? " active" : ""}"
+                  type="button"
+                  data-tree-id="${escapeHtml(item.id)}"
+                  title="${escapeHtml(item.name)}"
+                >
+                  <span class="status-dot ${statusClass(item.status)}"></span>
+                  <span>${escapeHtml(item.name)}</span>
+                </button>
+              `
+            )
+            .join("");
+
+          return `
+            <div class="tree-unit">
+              <button
+                class="tree-node tree-unit-name${unitActive ? " active" : ""}"
+                type="button"
+                data-tree-module="${escapeHtml(moduleName)}"
+                data-tree-unit="${escapeHtml(unitName)}"
+              >
+                <span>${escapeHtml(unitName)}</span>
+                <span class="tree-count">${items.length}</span>
+              </button>
+              <div class="tree-children">${itemButtons}</div>
+            </div>
+          `;
+        })
+        .join("");
+
+      return `
+        <details class="tree-module" open>
+          <summary>
+            <button
+              class="tree-node tree-module-name${moduleActive ? " active" : ""}"
+              type="button"
+              data-tree-module="${escapeHtml(moduleName)}"
+            >
+              <span>${escapeHtml(moduleName)}</span>
+              <span class="tree-count">${moduleItems.length}</span>
+            </button>
+          </summary>
+          <div class="tree-children">${unitBlocks}</div>
+        </details>
+      `;
+    })
+    .join("");
+
+  els.knowledgeTree.innerHTML = `
+    <button class="tree-root${rootActive ? " active" : ""}" type="button" data-tree-root="true">
+      <span>高中数学</span>
+      <span class="tree-count">${total}</span>
+    </button>
+    ${moduleBlocks}
+  `;
+
+  els.knowledgeTree.querySelector("[data-tree-root]").addEventListener("click", () => {
+    setTreeScope("全部", "全部", state.items[0]?.id || "");
+  });
+
+  els.knowledgeTree.querySelectorAll("[data-tree-module]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      const moduleName = button.dataset.treeModule;
+      const unitName = button.dataset.treeUnit || "全部";
+      const firstMatch = state.items.find((item) => {
+        const moduleMatch = item.module === moduleName;
+        const unitMatch = unitName === "全部" || item.unit === unitName;
+        return moduleMatch && unitMatch;
+      });
+      setTreeScope(moduleName, unitName, firstMatch?.id || "");
+    });
+  });
+
+  els.knowledgeTree.querySelectorAll("[data-tree-id]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const item = state.items.find((entry) => entry.id === button.dataset.treeId);
+      if (!item) return;
+      setTreeScope(item.module, item.unit, item.id);
+    });
+  });
+}
+
 function renderMetrics(items) {
   els.totalCount.textContent = items.length;
   els.weakCount.textContent = items.filter((item) => item.status === "未掌握").length;
@@ -897,6 +1013,7 @@ function renderMetrics(items) {
 
 function renderCards(items) {
   els.cardList.innerHTML = "";
+  els.resultCount.textContent = items.length;
   els.emptyState.hidden = items.length > 0;
 
   items.forEach((item) => {
@@ -922,7 +1039,7 @@ function renderCards(items) {
 }
 
 function renderDetail(items) {
-  const active = state.items.find((item) => item.id === state.activeId) || items[0];
+  const active = items.find((item) => item.id === state.activeId) || items[0];
   if (!active) {
     els.detailView.innerHTML = `<div class="empty-state">请选择或新增知识点</div>`;
     return;
@@ -977,8 +1094,9 @@ function renderDetail(items) {
   document.querySelector("#editActiveBtn").addEventListener("click", () => openEditor(active));
   document.querySelectorAll("[data-prereq-id]").forEach((button) => {
     button.addEventListener("click", () => {
-      state.activeId = button.dataset.prereqId;
-      render();
+      const item = state.items.find((entry) => entry.id === button.dataset.prereqId);
+      if (!item) return;
+      setTreeScope(item.module, item.unit, item.id);
     });
   });
 }
@@ -1029,7 +1147,8 @@ function escapeHtml(value = "") {
 
 function renderTitle(items) {
   const moduleText = state.filters.module === "全部" ? "全部知识点" : state.filters.module;
-  els.pageTitle.textContent = `${moduleText} · ${items.length} 项`;
+  const unitText = state.filters.unit === "全部" ? "" : ` / ${state.filters.unit}`;
+  els.pageTitle.textContent = `${moduleText}${unitText} · ${items.length} 项`;
 }
 
 function render() {
@@ -1038,6 +1157,7 @@ function render() {
     state.activeId = items[0].id;
   }
   renderFilters();
+  renderKnowledgeTree();
   renderTitle(items);
   renderMetrics(items);
   renderCards(items);

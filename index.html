@@ -17,10 +17,10 @@
           </div>
         </div>
 
-        <label class="search-box">
-          <span>搜索</span>
-          <input id="searchInput" type="search" placeholder="知识点 / 关键词" />
-        </label>
+        <section class="tree-panel">
+          <div class="filter-title">知识结构图谱</div>
+          <div id="knowledgeTree" class="knowledge-tree"></div>
+        </section>
 
         <section class="sync-panel">
           <div class="filter-title">协作同步</div>
@@ -33,21 +33,6 @@
             <button id="loadSharedBtn" class="button secondary" type="button">加载共享</button>
             <button id="saveSharedBtn" class="button primary" type="button">保存到 GitHub</button>
           </div>
-        </section>
-
-        <section class="filter-group">
-          <div class="filter-title">模块</div>
-          <div id="moduleFilters" class="chip-list"></div>
-        </section>
-
-        <section class="filter-group">
-          <div class="filter-title">掌握状态</div>
-          <div id="statusFilters" class="chip-list"></div>
-        </section>
-
-        <section class="filter-group">
-          <div class="filter-title">难度</div>
-          <div id="levelFilters" class="chip-list"></div>
         </section>
       </aside>
 
@@ -62,6 +47,21 @@
             <button id="addBtn" class="button primary" type="button">新增知识点</button>
           </div>
         </header>
+
+        <section class="tool-panel" aria-label="筛选">
+          <label class="search-box">
+            <span>搜索</span>
+            <input id="searchInput" type="search" placeholder="知识点 / 关键词" />
+          </label>
+          <div class="filter-group compact">
+            <div class="filter-title">掌握状态</div>
+            <div id="statusFilters" class="chip-list"></div>
+          </div>
+          <div class="filter-group compact">
+            <div class="filter-title">难度</div>
+            <div id="levelFilters" class="chip-list"></div>
+          </div>
+        </section>
 
         <section class="metrics" aria-label="统计">
           <div class="metric">
@@ -83,7 +83,11 @@
         </section>
 
         <div class="workspace">
-          <section class="knowledge-list" aria-label="知识点列表">
+          <section class="knowledge-list" aria-label="筛选结果">
+            <div class="list-head">
+              <h3>筛选结果</h3>
+              <span id="resultCount">0</span>
+            </div>
             <div id="cardList" class="card-list"></div>
             <div id="emptyState" class="empty-state" hidden>没有匹配的知识点</div>
           </section>
