@@ -1538,6 +1538,17 @@ const els = {
   examplesField: document.querySelector("#examplesField")
 };
 
+const state = {
+  items: [],
+  mistakes: [],
+  activeId: "",
+  filters: {
+    query: "",
+    status: "全部",
+    level: "全部"
+  }
+};
+
 function cloneSeed() {
   return normalizeItems(JSON.parse(JSON.stringify(seedKnowledge)));
 }
