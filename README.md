@@ -5,8 +5,9 @@
 - 快速定位学生不会的知识点
 - 用更适合补基础的语言讲清知识点
 - 记录掌握状态、常见错误、典型例题和推荐学习视频
+- 后续支持用 Codex 根据错题照片整理错题并入库
 
-当前版本：`v0.4.5`
+当前版本：`v0.5.0`
 
 ## 在线访问
 
@@ -108,6 +109,48 @@ Ctrl + F5
 
 或者清理该网站的浏览器缓存后重新打开。
 
+## 错题入库规范
+
+错题数据目录：
+
+```text
+data/mistakes/
+```
+
+错题图片目录：
+
+```text
+assets/mistakes/
+```
+
+错题索引文件：
+
+```text
+data/mistakes/index.json
+```
+
+当前只有一个学生，统一使用：
+
+```text
+studentId: default
+```
+
+错题入库采用“每道错题一个 JSON 文件”的方式，便于多人协作，减少多人同时编辑同一个大文件造成冲突。
+
+详细规范见：
+
+- [docs/mistake-schema.md](./docs/mistake-schema.md)
+- [docs/codex-workflow.md](./docs/codex-workflow.md)
+
+推荐的 Codex 使用方式：
+
+```text
+请从 GitHub 仓库 hyhml/knowledge_base 拉取最新内容。
+我会上传一张学生数学错题照片。
+请你识别题目，讲解解法，分析错因，关联已有知识点。
+然后按 docs/mistake-schema.md 保存错题 JSON、图片和索引，并提交推送到 GitHub。
+```
+
 ## 协作者编辑
 
 普通访问者可以直接查看网页。协作者如需把修改保存回 GitHub 仓库，需要准备 GitHub Token。
@@ -202,4 +245,4 @@ GitHub Pages 有短时间缓存。一般等待 1-3 分钟后刷新即可。
 
 详见 [CHANGELOG.md](./CHANGELOG.md)。
 
-当前版本：`v0.4.5`
+当前版本：`v0.5.0`

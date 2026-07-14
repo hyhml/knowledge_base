@@ -1,5 +1,26 @@
 # 版本说明
 
+## v0.5.0 - 2026-07-14
+
+错题入库规范版本。
+
+### 新增
+
+- 新增错题数据目录 `data/mistakes/`
+- 新增错题索引 `data/mistakes/index.json`
+- 新增错题图片目录 `assets/mistakes/`
+- 新增错题字段规范文档 `docs/mistake-schema.md`
+- 新增 Codex 错题入库工作流文档 `docs/codex-workflow.md`
+- README 增加错题入库说明和推荐 Codex 指令
+
+### 约定
+
+- 当前只有一个学生，统一使用 `studentId: default`
+- 错题图片上传到仓库
+- 每道错题一个 JSON 文件
+- AI 初次整理入库时使用 `reviewStatus: draft`
+- 人工审核后可改为 `reviewStatus: reviewed`
+
 ## v0.4.5 - 2026-07-14
 
 共享数据读取修复版本。
