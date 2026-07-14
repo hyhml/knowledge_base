@@ -1,5 +1,18 @@
 {
   "version": 1,
-  "updatedAt": "",
-  "mistakes": []
+  "updatedAt": "2026-07-14T19:25:17+08:00",
+  "mistakes": [
+    {
+      "id": "mistake-20260714-math-quadratic-function-001",
+      "file": "data/mistakes/2026-07-14-math-quadratic-function-001.json",
+      "imagePath": "assets/mistakes/2026-07-14-math-quadratic-function-001.jpg",
+      "studentId": "default",
+      "subject": "数学",
+      "date": "2026-07-14",
+      "knowledgeIds": [
+        "quadratic-function"
+      ],
+      "reviewStatus": "draft"
+    }
+  ]
 }
