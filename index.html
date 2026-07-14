@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>数学知识点库</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">数</div>
+          <div>
+            <h1>数学知识点库</h1>
+            <p>高三补基础</p>
+          </div>
+        </div>
+
+        <label class="search-box">
+          <span>搜索</span>
+          <input id="searchInput" type="search" placeholder="知识点 / 关键词" />
+        </label>
+
+        <section class="filter-group">
+          <div class="filter-title">模块</div>
+          <div id="moduleFilters" class="chip-list"></div>
+        </section>
+
+        <section class="filter-group">
+          <div class="filter-title">掌握状态</div>
+          <div id="statusFilters" class="chip-list"></div>
+        </section>
+
+        <section class="filter-group">
+          <div class="filter-title">难度</div>
+          <div id="levelFilters" class="chip-list"></div>
+        </section>
+      </aside>
+
+      <section class="content">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Knowledge Base</p>
+            <h2 id="pageTitle">全部知识点</h2>
+          </div>
+          <div class="topbar-actions">
+            <button id="resetBtn" class="button secondary" type="button">恢复样例</button>
+            <button id="addBtn" class="button primary" type="button">新增知识点</button>
+          </div>
+        </header>
+
+        <section class="metrics" aria-label="统计">
+          <div class="metric">
+            <span id="totalCount">0</span>
+            <p>知识点</p>
+          </div>
+          <div class="metric">
+            <span id="weakCount">0</span>
+            <p>未掌握</p>
+          </div>
+          <div class="metric">
+            <span id="learningCount">0</span>
+            <p>学习中</p>
+          </div>
+          <div class="metric">
+            <span id="masteredCount">0</span>
+            <p>已掌握</p>
+          </div>
+        </section>
+
+        <div class="workspace">
+          <section class="knowledge-list" aria-label="知识点列表">
+            <div id="cardList" class="card-list"></div>
+            <div id="emptyState" class="empty-state" hidden>没有匹配的知识点</div>
+          </section>
+
+          <section class="detail-panel" aria-label="知识点详情">
+            <div id="detailView"></div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <dialog id="editorDialog" class="editor-dialog">
+      <form id="knowledgeForm" method="dialog">
+        <div class="dialog-head">
+          <h3 id="dialogTitle">新增知识点</h3>
+          <button class="icon-button" value="cancel" type="submit" aria-label="关闭">×</button>
+        </div>
+
+        <input id="idField" type="hidden" />
+
+        <div class="form-grid">
+          <label>
+            名称
+            <input id="nameField" required />
+          </label>
+          <label>
+            模块
+            <input id="moduleField" required />
+          </label>
+          <label>
+            单元
+            <input id="unitField" required />
+          </label>
+          <label>
+            难度
+            <select id="levelField">
+              <option>基础</option>
+              <option>中等</option>
+              <option>提高</option>
+            </select>
+          </label>
+          <label>
+            状态
+            <select id="statusField">
+              <option>未掌握</option>
+              <option>学习中</option>
+              <option>已掌握</option>
+            </select>
+          </label>
+          <label>
+            下次复查日期
+            <input id="reviewDateField" type="date" />
+          </label>
+        </div>
+
+        <label>
+          前置知识点 ID（逗号分隔）
+          <input id="prereqField" placeholder="例如: set-basic,function-concept" />
+        </label>
+
+        <label>
+          讲解
+          <textarea id="explanationField" rows="5" required></textarea>
+        </label>
+
+        <label>
+          必会结论（每行一条）
+          <textarea id="keyPointsField" rows="4"></textarea>
+        </label>
+
+        <label>
+          常见错误（每行一条）
+          <textarea id="pitfallsField" rows="4"></textarea>
+        </label>
+
+        <label>
+          典型例题（用“题目 => 解法”每行一条）
+          <textarea id="examplesField" rows="4"></textarea>
+        </label>
+
+        <div class="dialog-actions">
+          <button id="deleteBtn" class="button danger" type="button">删除</button>
+          <div class="spacer"></div>
+          <button class="button secondary" value="cancel" type="submit">取消</button>
+          <button id="saveBtn" class="button primary" type="submit">保存</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
