@@ -1,4 +1,13 @@
 const STORAGE_KEY = "mathKnowledgeBase:v1";
+const TOKEN_KEY = "mathKnowledgeBase:githubToken";
+const GITHUB_CONFIG = {
+  owner: "hyhml",
+  repo: "knowledge_base",
+  branch: "main",
+  path: "data/knowledge.json"
+};
+
+let sharedFileSha = "";
 
 const seedKnowledge = [
   {
@@ -587,6 +596,10 @@ const state = {
 
 const els = {
   searchInput: document.querySelector("#searchInput"),
+  tokenInput: document.querySelector("#tokenInput"),
+  syncStatus: document.querySelector("#syncStatus"),
+  loadSharedBtn: document.querySelector("#loadSharedBtn"),
+  saveSharedBtn: document.querySelector("#saveSharedBtn"),
   moduleFilters: document.querySelector("#moduleFilters"),
   statusFilters: document.querySelector("#statusFilters"),
   levelFilters: document.querySelector("#levelFilters"),
@@ -636,6 +649,137 @@ function loadItems() {
 
 function saveItems() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items));
+}
+
+function githubContentsUrl() {
+  const { owner, repo, path } = GITHUB_CONFIG;
+  return `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+}
+
+function githubHeaders(token = "") {
+  const headers = {
+    Accept: "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28"
+  };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  return headers;
+}
+
+function decodeBase64Unicode(value) {
+  const binary = atob(value.replace(/\s/g, ""));
+  const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}
+
+function encodeBase64Unicode(value) {
+  const bytes = new TextEncoder().encode(value);
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    const chunk = bytes.subarray(index, index + chunkSize);
+    binary += String.fromCharCode(...chunk);
+  }
+  return btoa(binary);
+}
+
+function setSyncStatus(message, tone = "muted") {
+  els.syncStatus.textContent = message;
+  els.syncStatus.dataset.tone = tone;
+}
+
+function getToken() {
+  return els.tokenInput.value.trim();
+}
+
+async function fetchSharedFile(token = "") {
+  const url = `${githubContentsUrl()}?ref=${encodeURIComponent(GITHUB_CONFIG.branch)}`;
+  const response = await fetch(url, {
+    headers: githubHeaders(token),
+    cache: "no-store"
+  });
+
+  if (!response.ok) {
+    throw new Error(`GitHub 读取失败：${response.status}`);
+  }
+
+  const payload = await response.json();
+  const content = JSON.parse(decodeBase64Unicode(payload.content));
+  return {
+    content,
+    sha: payload.sha
+  };
+}
+
+async function loadSharedData({ showSuccess = true } = {}) {
+  try {
+    const token = getToken();
+    setSyncStatus("正在加载 GitHub 共享数据");
+    const shared = await fetchSharedFile(token);
+    state.items = Array.isArray(shared.content) ? shared.content : cloneSeed();
+    sharedFileSha = shared.sha;
+    state.activeId = state.items[0]?.id || "";
+    saveItems();
+    render();
+    setSyncStatus(showSuccess ? "已加载 GitHub 共享数据" : "已自动加载 GitHub 共享数据", "ok");
+  } catch (error) {
+    setSyncStatus("共享数据加载失败，当前显示本地缓存", "warn");
+    console.error(error);
+  }
+}
+
+async function saveSharedData() {
+  const token = getToken();
+  if (!token) {
+    setSyncStatus("保存需要协作者 GitHub Token", "warn");
+    els.tokenInput.focus();
+    return;
+  }
+
+  try {
+    setSyncStatus("正在检查 GitHub 最新版本");
+    const remote = await fetchSharedFile(token);
+    if (sharedFileSha && remote.sha !== sharedFileSha) {
+      setSyncStatus("远程数据已更新，请先加载共享数据再保存", "warn");
+      return;
+    }
+
+    const nextContent = `${JSON.stringify(state.items, null, 2)}\n`;
+    const response = await fetch(githubContentsUrl(), {
+      method: "PUT",
+      headers: {
+        ...githubHeaders(token),
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: `Update math knowledge data ${new Date().toISOString().slice(0, 10)}`,
+        content: encodeBase64Unicode(nextContent),
+        sha: remote.sha,
+        branch: GITHUB_CONFIG.branch
+      })
+    });
+
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        throw new Error("Token 权限不足或已失效");
+      }
+      if (response.status === 409) {
+        throw new Error("远程数据发生冲突，请重新加载后再保存");
+      }
+      throw new Error(`GitHub 保存失败：${response.status}`);
+    }
+
+    const payload = await response.json();
+    sharedFileSha = payload.content.sha;
+    saveItems();
+    setSyncStatus("已保存到 GitHub，共享网页会读取最新数据", "ok");
+  } catch (error) {
+    setSyncStatus(error.message || "保存失败", "warn");
+    console.error(error);
+  }
+}
+
+function markLocalChanged() {
+  setSyncStatus("本地已修改，协作者可点击保存到 GitHub", "warn");
 }
 
 function statusClass(status) {
@@ -952,6 +1096,7 @@ function saveFromForm() {
   state.activeId = nextItem.id;
   saveItems();
   render();
+  markLocalChanged();
 }
 
 function deleteActive() {
@@ -973,6 +1118,7 @@ function deleteActive() {
   saveItems();
   els.dialog.close();
   render();
+  markLocalChanged();
 }
 
 function resetData() {
@@ -982,6 +1128,7 @@ function resetData() {
   state.activeId = state.items[0]?.id || "";
   saveItems();
   render();
+  markLocalChanged();
 }
 
 els.searchInput.addEventListener("input", (event) => {
@@ -989,6 +1136,13 @@ els.searchInput.addEventListener("input", (event) => {
   render();
 });
 
+els.tokenInput.value = sessionStorage.getItem(TOKEN_KEY) || "";
+els.tokenInput.addEventListener("input", () => {
+  sessionStorage.setItem(TOKEN_KEY, getToken());
+});
+
+els.loadSharedBtn.addEventListener("click", () => loadSharedData());
+els.saveSharedBtn.addEventListener("click", saveSharedData);
 els.addBtn.addEventListener("click", () => openEditor());
 els.resetBtn.addEventListener("click", resetData);
 els.deleteBtn.addEventListener("click", deleteActive);
@@ -1000,6 +1154,11 @@ els.form.addEventListener("submit", (event) => {
   els.dialog.close();
 });
 
-state.items = loadItems();
-state.activeId = state.items[0]?.id || "";
-render();
+async function init() {
+  state.items = loadItems();
+  state.activeId = state.items[0]?.id || "";
+  render();
+  await loadSharedData({ showSuccess: false });
+}
+
+init();

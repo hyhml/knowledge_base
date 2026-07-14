@@ -143,6 +143,37 @@ textarea:focus {
   margin-top: 24px;
 }
 
+.sync-panel {
+  display: grid;
+  gap: 12px;
+  margin-top: 22px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  background: #f9fbfa;
+}
+
+.sync-panel p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.sync-panel p[data-tone="ok"] {
+  color: #166534;
+}
+
+.sync-panel p[data-tone="warn"] {
+  color: var(--warning);
+}
+
+.sync-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
 .filter-title {
   margin-bottom: 10px;
   color: var(--muted);

@@ -9,7 +9,9 @@
 - 查看知识点讲解、必会结论、常见错误、典型例题
 - 记录前置知识点，并支持点击跳转
 - 新增、编辑、删除知识点
-- 使用浏览器 `localStorage` 保存本地数据
+- 默认读取 `data/knowledge.json` 作为共享知识库
+- 协作者可使用 GitHub Token 保存修改到仓库
+- 使用浏览器 `localStorage` 保存本地缓存
 - 支持恢复内置样例数据
 
 ## 使用方式
@@ -17,6 +19,27 @@
 直接用浏览器打开 `index.html`。
 
 当前是纯静态页面，不需要安装依赖，也不需要启动后端服务。
+
+如果启用了 GitHub Pages，网页地址通常是：
+
+```text
+https://hyhml.github.io/knowledge_base/
+```
+
+## 协作者保存方式
+
+普通访问者可以直接查看网页。协作者如需修改共享数据，需要：
+
+1. 拥有 `hyhml/knowledge_base` 仓库写权限。
+2. 创建 GitHub fine-grained personal access token。
+3. Token 只选择 `hyhml/knowledge_base` 仓库。
+4. Repository permissions 只需要开启 `Contents: Read and write`。
+5. 打开网页，在“协作同步”区域输入 Token。
+6. 修改知识点后点击“保存到 GitHub”。
+
+Token 只保存在当前浏览器会话中，不会写入代码仓库。
+
+多人同时编辑时，如果远程数据已经被别人更新，页面会提示先加载共享数据再保存，避免直接覆盖。
 
 ## 当前知识点范围
 
@@ -34,12 +57,12 @@
 
 ## 数据说明
 
-知识点数据默认保存在浏览器本地存储中。更换浏览器、清理浏览器数据或点击“恢复样例”会影响本地修改。
+共享知识点数据保存在 `data/knowledge.json`。网页会优先加载该文件，本地浏览器存储只作为缓存。
 
-后续如需多人、多设备同步，可以再接入后端数据库。
+后续如需大量学生同时编辑、账号权限、精细审计，可以再接入后端数据库。
 
 ## 版本
 
-当前版本：`v0.1.0`
+当前版本：`v0.2.0`
 
 详见 [CHANGELOG.md](./CHANGELOG.md)。
