@@ -171,6 +171,23 @@
         "question": "求 y=x²-4x+5 的最小值。",
         "solution": "配方得 y=(x-2)²+1，所以最小值是 1。"
       }
+    ],
+    "recommendedVideos": [
+      {
+        "title": "【新高考一轮复习】二次函数！考点全梳理！",
+        "url": "https://www.bilibili.com/video/BV1M4jJ65Ee9",
+        "reason": "覆盖高中二次函数常见考点，适合先建立高考复习框架。"
+      },
+      {
+        "title": "关于二次函数，你应该知道的基本知识",
+        "url": "https://www.bilibili.com/video/BV1Fb4y1K77y",
+        "reason": "讲解偏概念理解，适合基础薄弱学生补开口方向、对称轴、顶点等核心认识。"
+      },
+      {
+        "title": "【压轴】二次函数区间最值4类大全",
+        "url": "https://www.bilibili.com/video/BV1zmSoBnEX1",
+        "reason": "集中训练区间最值分类讨论，能补上“顶点和端点都要比较”的易错点。"
+      }
     ]
   },
   {

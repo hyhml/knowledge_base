@@ -547,6 +547,38 @@ details:not([open]) > .tree-summary::before {
   margin-bottom: 4px;
 }
 
+.video-list {
+  display: grid;
+  gap: 10px;
+}
+
+.video-link {
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  color: inherit;
+  background: #fff;
+  text-decoration: none;
+}
+
+.video-link:hover {
+  border-color: var(--accent);
+  box-shadow: 0 10px 28px rgba(15, 118, 110, 0.1);
+}
+
+.video-link strong {
+  color: var(--accent-strong);
+  font-size: 15px;
+}
+
+.video-link span {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
 .prereq-list {
   display: flex;
   flex-wrap: wrap;

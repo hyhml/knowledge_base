@@ -167,6 +167,23 @@ const seedKnowledge = [
       "区间最值题只看顶点，不看端点。",
       "对称轴公式符号写错。"
     ],
+    recommendedVideos: [
+      {
+        title: "【新高考一轮复习】二次函数！考点全梳理！",
+        url: "https://www.bilibili.com/video/BV1M4jJ65Ee9",
+        reason: "覆盖高中二次函数常见考点，适合先建立高考复习框架。"
+      },
+      {
+        title: "关于二次函数，你应该知道的基本知识",
+        url: "https://www.bilibili.com/video/BV1Fb4y1K77y",
+        reason: "讲解偏概念理解，适合基础薄弱学生补开口方向、对称轴、顶点等核心认识。"
+      },
+      {
+        title: "【压轴】二次函数区间最值4类大全",
+        url: "https://www.bilibili.com/video/BV1zmSoBnEX1",
+        reason: "集中训练区间最值分类讨论，能补上“顶点和端点都要比较”的易错点。"
+      }
+    ],
     examples: [
       {
         question: "求 y=x²-4x+5 的最小值。",
@@ -1021,6 +1038,11 @@ function renderDetail(items) {
     </section>
 
     <section class="detail-section">
+      <h4>推荐视频</h4>
+      ${renderRecommendedVideos(active.recommendedVideos)}
+    </section>
+
+    <section class="detail-section">
       <h4>必会结论</h4>
       ${renderList(active.keyPoints)}
     </section>
@@ -1058,6 +1080,24 @@ function renderDetail(items) {
 function renderList(items = []) {
   if (!items.length) return `<p>暂未记录</p>`;
   return `<ul>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`;
+}
+
+function renderRecommendedVideos(videos = []) {
+  if (!videos.length) return `<p>暂未记录</p>`;
+  return `
+    <div class="video-list">
+      ${videos
+        .map(
+          (video) => `
+            <a class="video-link" href="${escapeHtml(video.url)}" target="_blank" rel="noopener noreferrer">
+              <strong>${escapeHtml(video.title)}</strong>
+              <span>${escapeHtml(video.reason)}</span>
+            </a>
+          `
+        )
+        .join("")}
+    </div>
+  `;
 }
 
 function renderPrerequisites(items) {
@@ -1160,6 +1200,9 @@ function saveFromForm() {
   const nextItem = readForm();
   const index = state.items.findIndex((item) => item.id === nextItem.id);
   if (index >= 0) {
+    if (state.items[index].recommendedVideos) {
+      nextItem.recommendedVideos = state.items[index].recommendedVideos;
+    }
     state.items[index] = nextItem;
   } else {
     state.items.unshift(nextItem);
